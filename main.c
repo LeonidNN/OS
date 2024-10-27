@@ -3,7 +3,6 @@
 #include <string.h>
 
 uint64_t calc_hash(const char* str, uint64_t modulus, uint64_t seed) {
-    // TODO: Write any hash function for further usage
     uint64_t hash = seed;
     uint64_t p = 107;
     uint64_t p_pow = 1;
@@ -17,7 +16,6 @@ uint64_t calc_hash(const char* str, uint64_t modulus, uint64_t seed) {
 }
 
 void bloom_init(struct BloomFilter* bloom_filter, uint64_t set_size, hash_fn_t hash_fn, uint64_t hash_fn_count) {
-    // TODO: Initialize bloom filter
     bloom_filter->set_size = set_size;
     bloom_filter->hash_fn = hash_fn;
     bloom_filter->hash_fn_count = hash_fn_count;
@@ -27,16 +25,33 @@ void bloom_init(struct BloomFilter* bloom_filter, uint64_t set_size, hash_fn_t h
 }
 
 void bloom_destroy(struct BloomFilter* bloom_filter) {
-    // TODO: Free memory if needed
     free(bloom_filter->set);
     bloom_filter->set = NULL;
 }
 
 void bloom_insert(struct BloomFilter* bloom_filter, Key key) {
-    // TODO: Insert key into set
+    for (uint64_t i = 0; i < bloom_filter->hash_fn_count; i++) {
+        uint64_t hash_value = bloom_filter->hash_fn(key, bloom_filter->set_size, i);
+        
+        uint64_t bit_index = hash_value % bloom_filter->set_size;
+        uint64_t array_index = bit_index / 64;
+        uint64_t bit_position = bit_index % 64;
+        
+        bloom_filter->set[array_index] |= (1 << bit_position);
+    }
 }
 
 bool bloom_check(struct BloomFilter* bloom_filter, Key key) {
-    // TODO: Check if key exists in set
+    for (uint64_t i = 0; i < bloom_filter->hash_fn_count; i++) {
+        uint64_t hash_value = bloom_filter->hash_fn(key, bloom_filter->set_size, i);
+        
+        uint64_t bit_index = hash_value % bloom_filter->set_size;
+        uint64_t array_index = bit_index / 64;
+        uint64_t bit_position = bit_index % 64;
+        
+        if (!(bloom_filter->set[array_index] & (1 << bit_position))) {
+            return false;
+        }
+    }
+    return true;
 }
-
